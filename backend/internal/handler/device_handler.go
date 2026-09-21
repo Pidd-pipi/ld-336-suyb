@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/medasset/medasset/internal/constants"
 	"github.com/medasset/medasset/internal/dto"
 	"github.com/medasset/medasset/internal/middleware"
 	"github.com/medasset/medasset/internal/service"
@@ -33,6 +34,23 @@ func (h *DeviceHandler) List(c *gin.Context) {
 		return
 	}
 	util.OK(c, result)
+}
+
+// WarrantyAlerts 保修到期预警清单（科室/类别/预警类型过滤；分类与剩余天数由后端统一计算）。
+func (h *DeviceHandler) WarrantyAlerts(c *gin.Context) {
+	department := c.Query("department")
+	category := c.Query("category")
+	alertType := c.Query("alert_type")
+	if alertType != "" && alertType != constants.WarrantyAlertExpired && alertType != constants.WarrantyAlertDue {
+		c.Error(util.NewAppError(http.StatusBadRequest, "预警类型不合法，仅支持 expired/due", nil))
+		return
+	}
+	list, err := h.svc.WarrantyAlerts(department, category, alertType)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	util.OK(c, list)
 }
 
 // Get 设备详情。

@@ -19,7 +19,7 @@ docker compose up -d --build
 
 ## 项目主要功能
 
-1. **设备台账管理**：全院医疗器械电子台账，支持按科室、设备类型、状态、关键字多维度检索；登记设备自动生成分发条码。
+1. **设备台账管理**：全院医疗器械电子台账，支持按科室、设备类型、状态、关键字多维度检索；登记设备自动生成分发条码；按当前日期自动计算保修剩余天数，区分“已过保/三十天内到期”预警（已报废、已禁用设备不进入清单，可按科室、类别、预警类型筛选）。
 2. **采购与验收流程**：科室申请 → 设备科审核 → 院长审批 → 到货登记 → 验收登记（配件清单、合格证/注册证）→ 正式入台账并生成分发条码。
 3. **维护与保养管理**：日检/周检/月检/年检保养计划自动生成与到期提醒，工程师执行并记录保养内容、更换配件、工时与费用；故障扫码快速报修与维修过程记录。
 4. **计量与质控管理**：计量台账（器具编号、周期、上下次计量日期），到期预警清单，计量结果登记（不合格自动标记设备禁用）。
@@ -126,6 +126,7 @@ cd frontend && npm install && npm run build
 | PUT | /users/:id | 更新用户 | SUPER_ADMIN |
 | DELETE | /users/:id | 删除用户 | SUPER_ADMIN |
 | GET | /devices | 设备台账列表（科室/类型/状态/关键字） | 登录 |
+| GET | /devices/warranty-alerts | 保修到期预警清单（科室/类别/预警类型，后端统一计算剩余天数与分类） | 登录 |
 | GET | /devices/:id | 设备详情 | 登录 |
 | POST | /devices | 登记设备 | 登录 |
 | PUT | /devices/:id | 更新设备 | 登录 |
@@ -208,6 +209,7 @@ curl -s http://localhost:19936/api/v1/stats/overview -H "Authorization: Bearer $
 | 保养/维修类型与状态（daily/weekly/monthly/yearly/repair；pending/in_progress/completed/cancelled） | `internal/constants/status.go`、`internal/model/maintenance_record.go`、`internal/dto/maintenance_dto.go`、`internal/service/maintenance_service.go`、`internal/repository/maintenance_repository.go`、`internal/util/formatters.go`、`internal/constants/log_templates.go` | `src/constants/enums.ts`、`src/app/pages/maintenance/maintenance.component.ts`、`src/app/components/status-badge/status-badge.component.ts`、`src/utils/format.ts` |
 | 计量状态 CalibrationStatus（normal/unqualified/due/expired） | `internal/constants/status.go`、`internal/model/calibration_record.go`、`internal/service/calibration_service.go`、`internal/repository/calibration_repository.go`、`internal/util/formatters.go`、`internal/constants/log_templates.go` | `src/constants/enums.ts`、`src/app/pages/calibrations/calibrations.component.ts`、`src/app/components/status-badge/status-badge.component.ts`、`src/utils/format.ts` |
 | 调拨/报废状态（pending/approved/rejected） | `internal/constants/status.go`、`internal/model/transfer_request.go`、`internal/model/scrap_request.go`、`internal/service/transfer_service.go`、`internal/service/scrap_service.go`、`internal/util/formatters.go`、`internal/constants/log_templates.go` | `src/constants/enums.ts`、`src/app/pages/transfers/transfers.component.ts`、`src/app/pages/scraps/scraps.component.ts`、`src/app/components/status-badge/status-badge.component.ts`、`src/utils/format.ts` |
+| 保修预警类型 WarrantyAlert（expired/due） | `internal/constants/status.go`、`internal/dto/device_dto.go`、`internal/service/device_service.go`、`internal/repository/device_repository.go`、`internal/handler/device_handler.go`、`internal/util/formatters.go` | `src/constants/enums.ts`、`src/models/index.ts`、`src/api/device.api.ts`、`src/stores/device.store.ts`、`src/app/pages/devices/devices.component.ts`、`src/utils/format.ts` |
 
 ## 横切关注点触达文件层
 

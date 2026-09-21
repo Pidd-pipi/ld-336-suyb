@@ -69,3 +69,12 @@ const (
 	CalibrationResultQualified   = "qualified"
 	CalibrationResultUnqualified = "unqualified"
 )
+
+// 保修预警类型枚举（由后端按当前日期统一计算分类，前端只展示结果）。
+const (
+	WarrantyAlertExpired = "expired" // 已过保
+	WarrantyAlertDue     = "due"     // 三十天内到期
+)
+
+// WarrantyAlertDueWindow 保修临期预警窗口（天）。
+const WarrantyAlertDueWindow = 30

@@ -55,6 +55,13 @@ export interface Device {
   warranty_expired?: boolean;
 }
 
+// 保修到期预警项：后端在设备台账基础上回填预警类型与剩余天数。
+export interface WarrantyAlert extends Device {
+  alert_type: 'expired' | 'due';
+  warranty_days: number;
+  warranty_expired: boolean;
+}
+
 export interface PurchaseRequest {
   id: number;
   request_no: string;

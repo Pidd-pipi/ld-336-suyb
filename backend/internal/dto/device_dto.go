@@ -52,3 +52,11 @@ type DeviceDetail struct {
 	model.Device
 	WarrantyExpired bool `json:"warranty_expired"`
 }
+
+// WarrantyAlertItem 保修到期预警清单项（分类与剩余天数均由后端统一计算，前端只展示）。
+type WarrantyAlertItem struct {
+	model.Device
+	AlertType      string `json:"alert_type"`
+	WarrantyDays   int    `json:"warranty_days"`
+	WarrantyExpired bool  `json:"warranty_expired"`
+}

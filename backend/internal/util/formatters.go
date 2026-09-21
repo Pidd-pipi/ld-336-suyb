@@ -146,3 +146,15 @@ func ScrapStatusText(status string) string {
 		return status
 	}
 }
+
+// WarrantyAlertText 保修预警类型展示文本。
+func WarrantyAlertText(alertType string) string {
+	switch alertType {
+	case constants.WarrantyAlertExpired:
+		return "已过保"
+	case constants.WarrantyAlertDue:
+		return "三十天内到期"
+	default:
+		return alertType
+	}
+}

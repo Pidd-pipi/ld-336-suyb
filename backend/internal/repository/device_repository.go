@@ -3,7 +3,9 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/medasset/medasset/internal/constants"
 	"github.com/medasset/medasset/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -79,6 +81,27 @@ func (r *DeviceRepository) List(page, pageSize int, department, category, status
 	}
 	err := q.Order("id DESC").Offset((page - 1) * pageSize).Limit(pageSize).Find(&list).Error
 	return list, total, err
+}
+
+// ListWarrantyAlerts 查询保修预警候选设备：已设置保修到期日，且已过保或在临期窗口内；
+// 已报废、已禁用设备不进入清单。窗口按日历天取整（今天零点 +31 天，开区间），
+// 确保“第 30 天”当天任意时刻都被纳入，而“第 31 天”不被纳入；精确分类由 service 层统一完成。
+func (r *DeviceRepository) ListWarrantyAlerts(department, category string, now time.Time) ([]model.Device, error) {
+	var list []model.Device
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	windowEnd := today.AddDate(0, 0, constants.WarrantyAlertDueWindow+1)
+	q := r.db.Model(&model.Device{}).
+		Where("warranty_expiry IS NOT NULL").
+		Where("status NOT IN ?", []string{constants.DeviceStatusScrapped, constants.DeviceStatusDisabled}).
+		Where("warranty_expiry < ?", windowEnd)
+	if department != "" {
+		q = q.Where("department = ?", department)
+	}
+	if category != "" {
+		q = q.Where("category = ?", category)
+	}
+	err := q.Order("warranty_expiry ASC").Find(&list).Error
+	return list, err
 }
 
 // Update 更新设备。

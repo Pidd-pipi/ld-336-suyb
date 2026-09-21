@@ -29,6 +29,7 @@ func TestRouteRegistration(t *testing.T) {
 		"GET /healthz",
 		"POST /api/v1/auth/login",
 		"GET /api/v1/devices",
+		"GET /api/v1/devices/warranty-alerts",
 		"POST /api/v1/purchases",
 		"POST /api/v1/maintenances/plan/generate",
 		"GET /api/v1/calibrations/due",

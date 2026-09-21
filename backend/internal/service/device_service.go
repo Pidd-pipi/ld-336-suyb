@@ -93,6 +93,53 @@ func (s *DeviceService) Get(id uint) (*dto.DeviceDetail, error) {
 	return &dto.DeviceDetail{Device: *d, WarrantyExpired: expired}, nil
 }
 
+// WarrantyAlerts 保修到期预警清单。按当前日期计算剩余天数并统一分类：
+// 已过保(expired) 与 三十天内到期(due)；已报废、已禁用设备不进入清单。
+// department/category 为设备维度过滤，alertType 为预警类型过滤（由后端分类后再筛选）。
+func (s *DeviceService) WarrantyAlerts(department, category, alertType string) ([]dto.WarrantyAlertItem, error) {
+	now := time.Now()
+	devices, err := s.repo.ListWarrantyAlerts(department, category, now)
+	if err != nil {
+		return nil, util.NewAppError(http.StatusInternalServerError, constants.MsgInternalError, err)
+	}
+	items := make([]dto.WarrantyAlertItem, 0, len(devices))
+	for _, d := range devices {
+		days := warrantyDaysLeft(now, d.WarrantyExpiry)
+		typ := warrantyAlertType(days)
+		if alertType != "" && alertType != typ {
+			continue
+		}
+		items = append(items, dto.WarrantyAlertItem{
+			Device:          d,
+			AlertType:       typ,
+			WarrantyDays:    days,
+			WarrantyExpired: typ == constants.WarrantyAlertExpired,
+		})
+	}
+	return items, nil
+}
+
+// warrantyDaysLeft 以日历天口径计算保修到期日相对当前日期的剩余天数（过期为负）。
+func warrantyDaysLeft(now time.Time, expiry *time.Time) int {
+	if expiry == nil {
+		return 0
+	}
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	end := time.Date(expiry.Year(), expiry.Month(), expiry.Day(), 0, 0, 0, 0, now.Location())
+	return int(end.Sub(today).Hours() / 24)
+}
+
+// warrantyAlertType 依据剩余天数判定预警类型：<0 已过保；0~30 三十天内到期；其余不属于预警。
+func warrantyAlertType(days int) string {
+	if days < 0 {
+		return constants.WarrantyAlertExpired
+	}
+	if days <= constants.WarrantyAlertDueWindow {
+		return constants.WarrantyAlertDue
+	}
+	return ""
+}
+
 // Update 更新设备信息。
 func (s *DeviceService) Update(id uint, req *dto.UpdateDeviceReq, operator string) (*model.Device, error) {
 	d, err := s.repo.FindByID(id)

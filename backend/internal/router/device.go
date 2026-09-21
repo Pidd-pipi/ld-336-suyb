@@ -10,6 +10,7 @@ func registerDeviceRoutes(g *gin.RouterGroup, h *handler.DeviceHandler) {
 	devices := g.Group("/devices")
 	{
 		devices.GET("", h.List)
+		devices.GET("/warranty-alerts", h.WarrantyAlerts)
 		devices.GET("/:id", h.Get)
 		devices.POST("", h.Create)
 		devices.PUT("/:id", h.Update)
