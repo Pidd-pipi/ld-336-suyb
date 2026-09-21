@@ -30,6 +30,9 @@ import { ROLE_TEXT } from '../../constants/enums';
           <a mat-list-item routerLink="/devices" routerLinkActive="active-link" (click)="router.navigate(['/devices'])">
             <mat-icon matListItemIcon>devices</mat-icon><span class="nav-caption">设备台账</span>
           </a>
+          <a mat-list-item routerLink="/warranty-alerts" routerLinkActive="active-link" (click)="router.navigate(['/warranty-alerts'])">
+            <mat-icon matListItemIcon>running_with_errors</mat-icon><span class="nav-caption">保修预警</span>
+          </a>
           <a mat-list-item routerLink="/purchases" routerLinkActive="active-link" (click)="router.navigate(['/purchases'])">
             <mat-icon matListItemIcon>shopping_cart</mat-icon><span class="nav-caption">采购验收</span>
           </a>

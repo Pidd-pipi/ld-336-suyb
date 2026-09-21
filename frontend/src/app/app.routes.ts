@@ -13,6 +13,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       { path: 'devices', loadComponent: () => import('./pages/devices/devices.component').then(m => m.DevicesComponent) },
+      { path: 'warranty-alerts', loadComponent: () => import('./pages/warranty/warranty-alerts.component').then(m => m.WarrantyAlertsComponent) },
       { path: 'purchases', loadComponent: () => import('./pages/purchases/purchases.component').then(m => m.PurchasesComponent) },
       { path: 'maintenance', loadComponent: () => import('./pages/maintenance/maintenance.component').then(m => m.MaintenanceComponent) },
       { path: 'calibrations', loadComponent: () => import('./pages/calibrations/calibrations.component').then(m => m.CalibrationsComponent) },

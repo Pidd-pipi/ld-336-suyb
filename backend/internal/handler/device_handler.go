@@ -118,3 +118,18 @@ func (h *DeviceHandler) Enable(c *gin.Context) {
 	}
 	util.OK(c, device)
 }
+
+// WarrantyAlerts 保修到期预警清单（科室/类别/预警类型筛选，分类与剩余天数由后端统一计算）。
+func (h *DeviceHandler) WarrantyAlerts(c *gin.Context) {
+	q := &dto.WarrantyAlertQuery{
+		Department:   c.Query("department"),
+		Category:     c.Query("category"),
+		WarrantyType: c.Query("warranty_type"),
+	}
+	list, err := h.svc.WarrantyAlerts(q)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	util.OK(c, list)
+}

@@ -55,6 +55,11 @@ export interface Device {
   warranty_expired?: boolean;
 }
 
+export interface WarrantyAlertItem extends Device {
+  warranty_type: string;
+  warranty_days_left: number;
+}
+
 export interface PurchaseRequest {
   id: number;
   request_no: string;

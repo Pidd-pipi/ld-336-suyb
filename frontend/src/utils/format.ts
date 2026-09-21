@@ -39,6 +39,7 @@ export function statusClass(status: string): string {
     approved: 'blue', delivered: 'purple', accepted: 'green', rejected: 'red',
     pending: 'orange', in_progress: 'blue', completed: 'green', cancelled: 'grey',
     normal: 'green', unqualified: 'red', due: 'orange', expired: 'red',
+    warranty_expired: 'red', warranty_due: 'orange',
   };
   return map[status] ?? 'grey';
 }

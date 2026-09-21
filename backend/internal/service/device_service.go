@@ -1,8 +1,8 @@
 package service
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -166,6 +166,54 @@ func (s *DeviceService) Enable(id uint, operator string) (*model.Device, error) 
 // ChangeStatusTx 在事务中变更设备状态（被验收/调拨/报废流程复用）。
 func (s *DeviceService) ChangeStatusTx(tx *gorm.DB, id uint, status string) error {
 	return s.repo.UpdateStatusTx(tx, id, status)
+}
+
+// WarrantyAlerts 保修到期预警清单（后端按当前日期统一计算剩余天数并分类，前端只展示）。
+// 已报废、已禁用设备不进入清单；预警类型分“已过保”和“30 天内到期”。
+func (s *DeviceService) WarrantyAlerts(q *dto.WarrantyAlertQuery) ([]dto.WarrantyAlertItem, error) {
+	now := time.Now()
+	devices, err := s.repo.ListWarrantyAlerts(q.Department, q.Category, constants.WarrantyDueWindowDays, now)
+	if err != nil {
+		return nil, util.NewAppError(http.StatusInternalServerError, constants.MsgInternalError, err)
+	}
+	items := make([]dto.WarrantyAlertItem, 0, len(devices))
+	for i := range devices {
+		d := devices[i]
+		alertType, daysLeft := classifyWarranty(d.WarrantyExpiry, now)
+		// service 层兜底复核分类，避免数据库时间边界误差；同时按预警类型过滤。
+		if alertType == "" {
+			continue
+		}
+		if q.WarrantyType != "" && q.WarrantyType != alertType {
+			continue
+		}
+		items = append(items, dto.WarrantyAlertItem{
+			Device:           d,
+			WarrantyType:     alertType,
+			WarrantyDaysLeft: daysLeft,
+		})
+	}
+	s.log.Info(fmt.Sprintf(constants.LogWarrantyAlertsQueried, len(items), q.Department, q.Category, q.WarrantyType))
+	return items, nil
+}
+
+// classifyWarranty 按自然日计算保修剩余天数并分类：
+// 到期日早于今日 -> 已过保（剩余天数为负）；距今 0~30 天（含两端）-> 30 天内到期；其余不在预警范围。
+func classifyWarranty(expiry *time.Time, now time.Time) (string, int) {
+	if expiry == nil {
+		return "", 0
+	}
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	expiryDay := time.Date(expiry.Year(), expiry.Month(), expiry.Day(), 0, 0, 0, 0, expiry.Location())
+	days := int(expiryDay.Sub(today).Hours() / 24)
+	switch {
+	case days < 0:
+		return constants.WarrantyAlertExpired, days
+	case days <= constants.WarrantyDueWindowDays:
+		return constants.WarrantyAlertDue, days
+	default:
+		return "", days
+	}
 }
 
 func (s *DeviceService) notFound(err error, id uint) error {

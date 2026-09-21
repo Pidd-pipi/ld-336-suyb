@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/medasset/medasset/internal/model"
 	"gorm.io/gorm"
@@ -116,7 +117,7 @@ func (r *DeviceRepository) GroupCount(field string) (map[string]int64, error) {
 		Count    int64
 	}
 	var rows []row
-	err := r.db.Model(&model.Device{}).Select(field+" AS group_key, COUNT(*) AS count").Group(field).Scan(&rows).Error
+	err := r.db.Model(&model.Device{}).Select(field + " AS group_key, COUNT(*) AS count").Group(field).Scan(&rows).Error
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +126,25 @@ func (r *DeviceRepository) GroupCount(field string) (map[string]int64, error) {
 		out[rw.GroupKey] = rw.Count
 	}
 	return out, nil
+}
+
+// ListWarrantyAlerts 查询保修到期预警候选设备：保修到期日不为空、距今 withinDays 天内（含已过保），
+// 且排除已报废/已禁用设备；支持按科室/类别过滤。最终“已过保/即将到期”分类由 service 层计算。
+func (r *DeviceRepository) ListWarrantyAlerts(department, category string, withinDays int, now time.Time) ([]model.Device, error) {
+	var list []model.Device
+	upper := now.AddDate(0, 0, withinDays)
+	q := r.db.Model(&model.Device{}).
+		Where("warranty_expiry IS NOT NULL").
+		Where("warranty_expiry <= ?", upper).
+		Where("status NOT IN ?", []string{"scrapped", "disabled"})
+	if department != "" {
+		q = q.Where("department = ?", department)
+	}
+	if category != "" {
+		q = q.Where("category = ?", category)
+	}
+	err := q.Order("warranty_expiry ASC").Find(&list).Error
+	return list, err
 }
 
 // Delete 删除设备。

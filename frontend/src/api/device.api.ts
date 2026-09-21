@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ApiResp, Device, PageResult } from '../models';
+import { ApiResp, Device, PageResult, WarrantyAlertItem } from '../models';
 import { API_BASE, extractData } from '../utils/request';
 
 export interface DeviceQuery {
@@ -10,6 +10,13 @@ export interface DeviceQuery {
   category?: string;
   status?: string;
   keyword?: string;
+}
+
+// 保修到期预警筛选条件；预警类型与剩余天数由后端统一计算。
+export interface WarrantyAlertQuery {
+  department?: string;
+  category?: string;
+  warranty_type?: string;
 }
 
 export interface CreateDevicePayload {
@@ -62,4 +69,13 @@ export function deviceDisableApi(http: HttpClient, id: number): Observable<Devic
 
 export function deviceEnableApi(http: HttpClient, id: number): Observable<Device> {
   return http.post<ApiResp<Device>>(`${API_BASE}/v1/devices/${id}/enable`, {}).pipe(map(extractData));
+}
+
+// 保修到期预警清单：后端按当前日期统一计算分类与剩余天数，前端只传筛选条件并展示结果。
+export function deviceWarrantyAlertsApi(http: HttpClient, q: WarrantyAlertQuery): Observable<WarrantyAlertItem[]> {
+  let params = new HttpParams();
+  if (q.department) params = params.set('department', q.department);
+  if (q.category) params = params.set('category', q.category);
+  if (q.warranty_type) params = params.set('warranty_type', q.warranty_type);
+  return http.get<ApiResp<WarrantyAlertItem[]>>(`${API_BASE}/v1/devices/warranty-warning`, { params }).pipe(map(extractData));
 }

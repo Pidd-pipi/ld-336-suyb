@@ -123,5 +123,16 @@ export const USER_STATUS_TEXT: Record<string, string> = {
   disabled: '禁用',
 };
 
+// 保修到期预警类型（与后端 internal/constants/warranty.go 对应；分类由后端统一计算，前端只展示）。
+export const WARRANTY_ALERT = {
+  EXPIRED: 'warranty_expired',
+  DUE: 'warranty_due',
+} as const;
+
+export const WARRANTY_ALERT_TEXT: Record<string, string> = {
+  warranty_expired: '已过保',
+  warranty_due: '30天内到期',
+};
+
 export const DEPARTMENTS = ['心内科', '放射科', 'ICU', '手术室', '检验科', '急诊科', '设备科', '口腔科'];
 export const DEVICE_CATEGORIES = ['影像设备', '生命支持', '检验设备', '手术器械', '消毒设备', '康复设备', '其他'];

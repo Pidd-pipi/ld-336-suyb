@@ -131,6 +131,7 @@ cd frontend && npm install && npm run build
 | PUT | /devices/:id | 更新设备 | 登录 |
 | POST | /devices/:id/disable | 禁用设备 | 登录 |
 | POST | /devices/:id/enable | 启用设备 | 登录 |
+| GET | /devices/warranty-warning | 保修到期预警清单（科室/类别/预警类型；剩余天数与分类由后端统一计算，已报废/已禁用不返回） | 登录 |
 | GET | /purchases | 采购申请列表 | 登录 |
 | GET | /purchases/:id | 采购详情 | 登录 |
 | POST | /purchases | 提交采购申请 | 登录 |
@@ -164,6 +165,7 @@ cd frontend && npm install && npm run build
 ### 复用关系标注（≥2 处接口复用同一 service/repository 方法）
 
 - `GET /api/v1/devices?status=...`（设备列表）与 `GET /api/v1/stats/overview`（统计总览）复用 `DeviceRepository.Count`（`internal/repository/device_repository.go`）与 `DeviceRepository.GroupCount`。
+- `GET /api/v1/devices/warranty-warning`（保修到期预警）与设备台账/调拨/报废共用 `DeviceRepository` 与设备表；预警仅新增只读方法 `DeviceRepository.ListWarrantyAlerts`，不改变台账与调拨流程。
 - `POST /api/v1/purchases/:id/accept`（验收入台账）、`POST /api/v1/transfers/:id/approve`（调拨）、`POST /api/v1/scraps/:id/approve`（报废）均复用 `DeviceRepository.UpdateStatusTx`（事务内状态流转，`internal/repository/device_repository.go`）。
 - 所有写操作（注册/登录/采购/调拨/报废/计量/保养）统一复用 `AuditService.Record`（`internal/service/audit_service.go`）与 `AuditRepository.Create` 写入审计日志。
 

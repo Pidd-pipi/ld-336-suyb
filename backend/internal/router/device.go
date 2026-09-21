@@ -9,6 +9,8 @@ import (
 func registerDeviceRoutes(g *gin.RouterGroup, h *handler.DeviceHandler) {
 	devices := g.Group("/devices")
 	{
+		// 静态路径须在参数路由 :id 之前注册（Gin radix 树冲突规则）。
+		devices.GET("/warranty-warning", h.WarrantyAlerts)
 		devices.GET("", h.List)
 		devices.GET("/:id", h.Get)
 		devices.POST("", h.Create)
